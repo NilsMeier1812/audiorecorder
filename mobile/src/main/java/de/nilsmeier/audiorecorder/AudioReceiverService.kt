@@ -48,8 +48,8 @@ class AudioReceiverService : WearableListenerService() {
         // Die Watch schließt den Channel selbst nach erfolgreichem sendFile –
         // NORMAL und REMOTE_CLOSE bedeuten daher vollständige Daten, nur ein
         // Verbindungsabriss (DISCONNECTED) heißt unvollständig.
-        val complete = closeReason == ChannelClient.CLOSE_REASON_NORMAL ||
-            closeReason == ChannelClient.CLOSE_REASON_REMOTE_CLOSE
+        val complete = closeReason == ChannelClient.ChannelCallback.CLOSE_REASON_NORMAL ||
+            closeReason == ChannelClient.ChannelCallback.CLOSE_REASON_REMOTE_CLOSE
         if (complete && tempFile.exists() && tempFile.length() > 0) {
             val fileName = sanitizeFileName(channel.path.removePrefix(PATH_PREFIX))
             val savedUri = saveToDownloads(tempFile, fileName)
