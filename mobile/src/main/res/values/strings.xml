@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Watch Recorder</string>
+    <string name="notification_channel_name">Empfangene Aufnahmen</string>
+    <string name="notification_received_title">Aufnahme von der Watch empfangen</string>
+    <string name="status_checking">Suche Watch…</string>
+    <string name="status_connected">Verbunden mit: %1$s</string>
+    <string name="status_disconnected">Keine Watch verbunden.\nBitte Galaxy-Wearable-Kopplung prüfen.</string>
+    <string name="storage_hint">Aufnahmen von der Watch werden automatisch empfangen und unter Downloads/WatchRecordings gespeichert. Diese App muss dafür nicht geöffnet sein.</string>
+    <string name="open_downloads">Downloads öffnen</string>
+</resources>
