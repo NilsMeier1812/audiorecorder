@@ -17,8 +17,10 @@ import androidx.wear.ongoing.OngoingActivity
 import androidx.wear.ongoing.Status
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -67,6 +69,7 @@ class RecorderService : Service() {
     private var recorder: MediaRecorder? = null
     private var outputFile: File? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var tickerJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -121,16 +124,36 @@ class RecorderService : Service() {
             .apply { acquire(4 * 60 * 60 * 1000L) }
 
         val startedAt = SystemClock.elapsedRealtime()
+        createNotificationChannel()
         startForeground(
             NOTIFICATION_ID,
-            buildRecordingNotification(startedAt),
+            buildRecordingNotification(startedAt, 0L),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
         )
         _state.value = RecorderState.Recording(startedAt)
+        startTicker(startedAt)
+    }
+
+    /** Aktualisiert den Benachrichtigungs-Timer jede Sekunde auf mm:ss. */
+    private fun startTicker(startedAt: Long) {
+        tickerJob?.cancel()
+        tickerJob = scope.launch {
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            while (true) {
+                val elapsed = SystemClock.elapsedRealtime() - startedAt
+                notificationManager.notify(
+                    NOTIFICATION_ID,
+                    buildRecordingNotification(startedAt, elapsed)
+                )
+                delay(1000)
+            }
+        }
     }
 
     private fun stopAndTransfer() {
         _state.value = RecorderState.Transferring
+        tickerJob?.cancel()
+        tickerJob = null
 
         finishRecordingFile()
         releaseWakeLock()
@@ -148,9 +171,10 @@ class RecorderService : Service() {
         }
     }
 
-    private fun buildRecordingNotification(startedAtRealtime: Long): android.app.Notification {
-        createNotificationChannel()
-
+    private fun buildRecordingNotification(
+        startedAtRealtime: Long,
+        elapsedMillis: Long
+    ): android.app.Notification {
         val touchIntent = PendingIntent.getActivity(
             this,
             0,
@@ -158,10 +182,10 @@ class RecorderService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Sichtbarer Inhalt ist ausschließlich der Timer (mm:ss) – kein Text, kein Emoji.
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_mic)
-            .setContentTitle(getString(R.string.notification_title))
-            .setContentText(getString(R.string.notification_text))
+            .setContentTitle(formatMmSs(elapsedMillis))
             .setContentIntent(touchIntent)
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_WORKOUT)
@@ -187,6 +211,12 @@ class RecorderService : Service() {
             .setContentTitle(getString(R.string.transferring))
             .setOngoing(true)
             .build()
+    }
+
+    /** Formatiert die verstrichene Zeit als mm:ss (Minuten laufen über 59 hinaus weiter). */
+    private fun formatMmSs(elapsedMillis: Long): String {
+        val totalSeconds = elapsedMillis / 1000
+        return String.format(Locale.GERMANY, "%02d:%02d", totalSeconds / 60, totalSeconds % 60)
     }
 
     private fun createNotificationChannel() {
@@ -221,6 +251,8 @@ class RecorderService : Service() {
     }
 
     override fun onDestroy() {
+        tickerJob?.cancel()
+        tickerJob = null
         // Falls das System den Service während einer Aufnahme beendet:
         // Aufnahme sauber abschließen und in die Outbox legen, damit nichts verloren geht.
         if (_state.value is RecorderState.Recording) {

@@ -2,12 +2,6 @@
 <resources>
     <string name="app_name">Audio Recorder</string>
     <string name="notification_channel_name">Aufnahme</string>
-    <string name="notification_title">Aufnahme läuft</string>
-    <string name="notification_text">Tippen zum Stoppen</string>
     <string name="permission_needed">Mikrofon-Berechtigung wird benötigt</string>
-    <string name="recording">Aufnahme läuft</string>
-    <string name="stop">Stopp</string>
     <string name="transferring">Übertrage ans Handy…</string>
-    <string name="sent">An Handy gesendet ✓</string>
-    <string name="queued">Handy nicht erreichbar.\nWird beim nächsten Mal nachgeholt.</string>
 </resources>
