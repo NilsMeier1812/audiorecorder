@@ -184,7 +184,7 @@ class RecorderService : Service() {
 
         // Sichtbarer Inhalt ist ausschließlich der Timer (mm:ss) – kein Text, kein Emoji.
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_mic)
+            .setSmallIcon(R.drawable.ic_status)
             .setContentTitle(formatMmSs(elapsedMillis))
             .setContentIntent(touchIntent)
             .setOngoing(true)
@@ -196,7 +196,7 @@ class RecorderService : Service() {
             .build()
 
         OngoingActivity.Builder(applicationContext, NOTIFICATION_ID, builder)
-            .setStaticIcon(R.drawable.ic_mic)
+            .setStaticIcon(R.drawable.ic_status)
             .setTouchIntent(touchIntent)
             .setStatus(status)
             .build()
@@ -207,7 +207,7 @@ class RecorderService : Service() {
 
     private fun buildTransferNotification(): android.app.Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_mic)
+            .setSmallIcon(R.drawable.ic_status)
             .setContentTitle(getString(R.string.transferring))
             .setOngoing(true)
             .build()
